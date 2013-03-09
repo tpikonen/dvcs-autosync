@@ -1,0 +1,10 @@
+/home/*/.local/share/autosync/log/*.log {
+	daily
+	missingok
+	rotate 15
+	compress
+	notifempty
+	copytruncate
+	create 600
+}
+
