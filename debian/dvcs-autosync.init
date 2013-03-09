@@ -1,0 +1,131 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          dvcs-autosync
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Should-Start:      autofs $named
+# Should-Stop:       autofs $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: DVCS-Autosync
+# Description:       Starts dvcs-autosync for all users who have it
+#                    configured.
+### END INIT INFO
+
+[ -r /etc/default/dvcs-autosync ] && . /etc/default/dvcs-autosync
+. /lib/lsb/init-functions
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+NAME=dvcs-autosync
+DESC="DVCS autosynchronizer"
+DAEMON=/usr/bin/dvcs-autosync
+STARTERSCRIPT=/usr/share/dvcs-autosync/autosync-xdg-launcher.sh
+
+[ -x $DAEMON ] || exit 0
+[ -x $STARTERSCRIPT ] || exit 0
+
+
+get_users () {
+    if [ "$START_FOR_EVERYONE" = "1" ] ; then
+        USERS=""
+        IFS=:
+        while read UNAME PASS USERID GROUPID INFO HOMEDIR LSHELL
+        do
+            if [ $USERID -ge 1000 -a $USERID -lt 65534 ] \
+            && grep -q "$LSHELL" /etc/shells \
+            && [ -d ${HOMEDIR}/.config/autosync ]; \
+            then
+                USERS="$USERS $UNAME"
+            fi
+        done < /etc/passwd
+    else
+        USERS=$AUTOSYNC_USERS
+    fi
+}
+
+
+autosync_start () {
+    if [ "$START_AUTOSYNC" != "1" ] ; then
+        log_action_msg "Not starting $DESC: disabled by /etc/default/$NAME"
+        exit 0
+    fi
+    log_daemon_msg "Starting $DESC for users"
+    get_users
+    IFS=' '
+    for UNAME in $USERS
+    do
+        log_progress_msg $UNAME
+        CONFDIR=$(su $UNAME -c 'echo ${XDG_CONF_HOME:-$HOME/.config}/autosync')
+        DATADIR=$(su $UNAME -c 'echo ${XDG_DATA_HOME:-$HOME/.local/share}/autosync')
+        NUM=1
+        for CFILE in $CONFDIR/*
+        do
+            log_progress_msg $NUM
+            start-stop-daemon --start --background -c $UNAME -u $UNAME \
+                --pidfile $DATADIR/$(basename $CFILE).pid \
+                --exec $DAEMON -- $CFILE
+            NUM=$(expr $NUM + 1)
+        done
+    done
+    log_end_msg $?
+}
+
+
+autosync_stop () {
+    if [ "$START_AUTOSYNC" != "1" ] ; then
+        log_action_msg "Not stopping $DESC: disabled by /etc/default/$NAME"
+        exit 0
+    fi
+    log_daemon_msg "Stopping $DESC for users"
+    get_users
+    NUM=0
+    IFS=' '
+    for UNAME in $USERS
+    do
+        log_progress_msg $UNAME
+        CONFDIR=$(su $UNAME -c 'echo ${XDG_CONF_HOME:-$HOME/.config}/autosync')
+        DATADIR=$(su $UNAME -c 'echo ${XDG_DATA_HOME:-$HOME/.local/share}/autosync')
+        NUM=0
+        for CFILE in $CONFDIR/*
+        do
+            if start-stop-daemon --stop -u $UNAME \
+                --pidfile $DATADIR/$(basename $CFILE).pid > /dev/null ; then
+                NUM=$(expr $NUM + 1)
+                log_progress_msg $NUM
+            fi
+        done
+        if [ "$NUM" = "0" ] ; then
+            log_progress_msg "(none found)"
+        fi
+    done
+    log_end_msg $?
+}
+
+
+autosync_status () {
+    ps axu | sed -n 's|^\([^ ]*\)  *\([0-9]*\)[^d]*/usr/bin/dvcs-autosync  *\([^ ]*\).*$|\1 \3 \2|p'
+    exit 4
+}
+
+
+case "$1" in
+    start)
+        autosync_start
+        ;;
+    stop)
+        autosync_stop
+        ;;
+    status)
+        autosync_status
+        ;;
+    restart|force-reload)
+        autosync_stop
+        autosync_start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|restart|force-reload}"
+        exit 2
+        ;;
+esac
+

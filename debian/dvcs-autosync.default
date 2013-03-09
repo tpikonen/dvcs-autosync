@@ -1,0 +1,14 @@
+# Set to 1 if you want to start dvcs-autosync in init. Only recommended for
+# systems which do not run a desktop environment. Normally dvcs-autosync
+# should be started in desktop environment startup with the script at
+# /usr/share/dvcs-autosync/autosync-xdg-launcher.sh
+START_AUTOSYNC=0
+
+# Set to 1 if you want init to start dvcs-autosync for all users
+# with a valid config in $HOME/.config/autosync
+START_FOR_EVERYONE=1
+
+# If you do not want to iterate through all users during startup, put here
+# a space separated list of usernames, for who dvcs-autosync is started,
+# if a valid config exists.
+#AUTOSYNC_USERS='alice bob'
