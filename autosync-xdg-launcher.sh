@@ -7,5 +7,5 @@ mkdir -p $data/log
 for i in $conf/*
 do
     pkill -f "python.*dvcs-autosync .*autosync/$(basename $i)"
-    dvcs-autosync $i &> $data/log/$(basename $i).$(date '+%F-%T').log &
+    dvcs-autosync $i &>> $data/log/$(basename $i).log &
 done
