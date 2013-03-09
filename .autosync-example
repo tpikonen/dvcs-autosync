@@ -6,6 +6,9 @@ path = ~/amw
 # default.
 #pidfile = ~/.autosync.pid
 
+# If logfile is not specified, logs are written to standard output.
+#logfile = ~/.autosync.log
+
 # Available synchronization methods: "xmpp" and "none", "autosync-server"
 # may be implemented later (to potentially be interoperable with SparkleShare).
 # If xmpp is set as synchronization method, a config section [xmpp] with at 

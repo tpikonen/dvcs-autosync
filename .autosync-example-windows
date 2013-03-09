@@ -1,6 +1,8 @@
 [autosync]
 path = ~/Desktop/splashbin
 pidfile = ~/.autosync.pid
+# If logfile is not specified, logs are written to standard output.
+#logfile = ~/.autosync.log
 syncmethod = xmpp
 #syncmethod = autosync-server
 

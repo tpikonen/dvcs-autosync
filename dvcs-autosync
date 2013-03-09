@@ -737,8 +737,25 @@ def signal_handler(signal, frame):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    
+    config = ConfigParser.RawConfigParser()
+    defaultcfgpath = os.path.expanduser('~/.autosync')
+    if len(sys.argv) >= 2:
+        config_locations = [sys.argv[1], defaultcfgpath]
+    else:
+        config_locations = [defaultcfgpath]
+    read_configfiles = config.read(config_locations)
+    if len(read_configfiles) == 0:
+        logging.error('No config file specified or config file(s) %s could not be opened' % config_locations)
+        sys.exit(10)
+
+    logstream = sys.stdout
+    logfile = config_get('autosync', 'logfile', optional=True)
+    if logfile:
+        logfile = os.path.normpath(os.path.expanduser(logfile))
+        logstream = open(logfile, 'a')
+    logformat = '%(asctime)-15s %(message)s'
+    logging.basicConfig(level=logging.DEBUG, format=logformat, stream=logstream)
+
     # try to set up desktop notification, first for KDE4, then for Gnome
     # the signature is not correct, so rely on pynotify only at the moment
     #try:
@@ -777,18 +794,6 @@ if __name__ == '__main__':
         desktopnotifygrowl = True
     except:
         logging.info('Growl does not seem to be installed')
-
-
-    config = ConfigParser.RawConfigParser()
-    defaultcfgpath = os.path.expanduser('~/.autosync')
-    if len(sys.argv) >= 2:
-        config_locations = [sys.argv[1], defaultcfgpath]
-    else:
-        config_locations = [defaultcfgpath]
-    read_configfiles = config.read(config_locations)
-    if len(read_configfiles) == 0:
-	logging.error('No config file specified or config file(s) %s could not be opened' % config_locations)
-	sys.exit(10)
 
     pathstr = config_get('autosync', 'path')
     path = os.path.normpath(os.path.expanduser(pathstr))
