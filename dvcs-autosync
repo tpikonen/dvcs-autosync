@@ -722,18 +722,25 @@ def config_get (section, option, optional=False):
     return ret
 
 
-def signal_handler(signal, frame):
-    logging.info('You pressed Ctrl+C, exiting gracefully!')
+def shutdown():
     if notifier:
         notifier.stop()
     if bot:
         bot.stop_serving()
-
     # also remove the pidfile after a clean shutdown
     if pidfile and os.path.exists(pidfile):
         os.remove(pidfile)
-        
     sys.exit(0)
+
+
+def sigint_handler(signal, frame):
+    logging.info('You pressed Ctrl+C, exiting gracefully!')
+    shutdown()
+
+
+def sigterm_handler(signal, frame):
+    logging.info('TERM signal received, exiting!')
+    shutdown()
 
 
 if __name__ == '__main__':
@@ -903,7 +910,8 @@ if __name__ == '__main__':
     ignoreabsolutepaths = [os.path.normpath(path + os.sep + ignorepath) for ignorepath in ignorepaths.split()]
     logging.info('Adding list to inotify exclude filter: %s', ignoreabsolutepaths)
 
-    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, sigint_handler)
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
     if syncmethod == 'xmpp':
 	username = config_get('xmpp', 'username')
