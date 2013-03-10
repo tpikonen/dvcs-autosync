@@ -762,6 +762,9 @@ if __name__ == '__main__':
         logstream = open(logfile, 'a')
     logformat = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=logformat, stream=logstream)
+    logging.info("dvcs-autosync starting up.")
+    logging.info("Configuration read from %s" % read_configfiles)
+
 
     # try to set up desktop notification, first for KDE4, then for Gnome
     # the signature is not correct, so rely on pynotify only at the moment
