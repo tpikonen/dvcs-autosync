@@ -806,8 +806,12 @@ if __name__ == '__main__':
     # ensure that the script is not running twice with the same config file
     pidfile = config_get('autosync', 'pidfile', optional=True)
     if not pidfile:
-	# default pidfile name if not specified in config
-	pidfile = read_configfiles[0] + '.pid'
+        # default pidfile name if not specified in config
+        try:
+            piddir = os.environ['XDG_DATA_HOME'] + '/autosync/'
+        except KeyError:
+            piddir = '~/.local/share/autosync/'
+	    pidfile = piddir + os.path.basename(read_configfiles[0]) + '.pid'
     pidfile = os.path.normpath(os.path.expanduser(pidfile))
     logging.debug('Checking/writing pidfile %s' % pidfile)
     # does the file already exist?

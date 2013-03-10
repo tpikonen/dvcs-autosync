@@ -1,9 +1,11 @@
 [autosync]
 path = ~/amw
-# If pidfile is not explicitly specified, the name of the used config file
-# will be appended with '.pid', e.g. for a config file ~/.autosync, the PID
-# will be written to ~/.autosync.pid. This option allows to override the
-# default.
+# If pidfile is not explicitly specified, the pidfile will be placed in
+# $XDG_DATA_HOME/autosync (or ~/.local/share/autosync) and will be named
+# with the basename of the used config file appended with '.pid'.
+# E.g. for a config file ~/.autosync, the PID will be written to
+# $XDG_DATA_HOME/autosync/.autosync.pid. This option allows to override
+# the default.
 #pidfile = ~/.autosync.pid
 
 # If logfile is not specified, logs are written to standard output.
